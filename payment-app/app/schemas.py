@@ -1,10 +1,11 @@
-from pydantic import BaseModel, EmailStr
+from __future__ import annotations
+from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
+from datetime import datetime
 
 class ImportCSVRequest(BaseModel):
     customers_file_path: str
     purchased_file_path: str
-
 
 class PurchaseSchema(BaseModel):
     purchase_identifier: Optional[str] = None
@@ -12,16 +13,13 @@ class PurchaseSchema(BaseModel):
     quantity: int
     price: float
     currency: str
-    date: str
+    date: datetime
     is_synchronized: bool = False
     attempt_number: int = 0
-    
-    model_config = {"from_attributes": True}
-
 
 class CustomerSyncSchema(BaseModel):
-    customer_id: Optional[int] = None  
-    title: Optional[int] = None   
+    external_id: Optional[int] = Field(None, alias="customer_id")
+    title: Optional[int] = None
     firstname: str
     lastname: str
     postal_code: Optional[str] = None
@@ -29,6 +27,4 @@ class CustomerSyncSchema(BaseModel):
     email: EmailStr
     is_synchronized: bool = False
     attempt_number: int = 0
-    purchases: list[PurchaseSchema]
-
-    model_config = {"from_attributes": True}
+    purchases: list[PurchaseSchema] = []
