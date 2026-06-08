@@ -82,7 +82,25 @@ def test_import_csv_success_populates_db():
         assert len(ps) == 1
         assert abs(ps[0].price - 19.99) < 1e-6
         assert ps[0].quantity == 2
-        assert isinstance(ps[0].date, datetime)
+
+        # Purchase.date may now be stored as a string; accept both and validate value.
+        raw_date = ps[0].date
+        parsed_date = None
+        if isinstance(raw_date, datetime):
+            parsed_date = raw_date
+        else:
+            s = str(raw_date).strip().strip('"').strip("'")
+            try:
+                parsed_date = datetime.fromisoformat(s)
+            except Exception:
+                for fmt in ("%Y-%m-%d", "%Y-%m-%d %H:%M:%S"):
+                    try:
+                        parsed_date = datetime.strptime(s, fmt)
+                        break
+                    except Exception:
+                        continue
+        assert parsed_date is not None
+        assert parsed_date.date() == datetime.fromisoformat("2024-12-01").date()
     finally:
         db.close()
 

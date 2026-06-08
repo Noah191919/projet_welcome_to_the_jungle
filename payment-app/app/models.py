@@ -32,7 +32,7 @@ class Purchase(Base):
     quantity = Column(Integer, nullable=False)
     price = Column(Float, nullable=False)
     currency = Column(String, nullable=False)
-    date = Column(DateTime(timezone=True), server_default=func.now(), nullable=False)
+    date = Column(String, nullable=False)
     is_synchronized = Column(Boolean, nullable=False, default=False)
     attempt_number = Column(Integer, nullable=False, default=0)
 

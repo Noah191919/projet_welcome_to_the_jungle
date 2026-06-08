@@ -41,6 +41,32 @@ class SyncService:
         self.external = external_client
         self.csv = csv_parser
 
+    def _build_customer_payload(self, cust) -> dict:
+        """
+        Construire le payload customer attendu par l'API externe à partir d'une instance
+        de Customer (avec relation purchases). Retourne un dict serializable
+        (utilise CustomerSyncSchema pour validation/normalisation).
+        """
+        return CustomerSyncSchema.model_validate({
+            "customer_id": cust.external_id,
+            "title": cust.title,
+            "firstname": cust.firstname,
+            "lastname": cust.lastname,
+            "postal_code": cust.postal_code,
+            "city": cust.city,
+            "email": cust.email,
+            "purchases": [
+                {
+                    "purchase_identifier": p.purchase_identifier,
+                    "product_id": int(p.product_id),
+                    "quantity": int(p.quantity),
+                    "price": float(p.price),
+                    "currency": p.currency,
+                    "date": p.date
+                } for p in (cust.purchases or [])
+            ]
+        }).model_dump()
+
     def import_csv_to_db(self, db: Session, customers_path: str, purchases_path: str):
         customer_rows = list(self.csv.read_rows(customers_path))
         purchase_rows = list(self.csv.read_rows(purchases_path))

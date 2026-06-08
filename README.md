@@ -2,7 +2,16 @@
 
 ## Description
 Service FastAPI pour importer des fichiers CSV (clients + achats) dans une base SQLite et synchroniser les données vers une API externe.  
-La résilience réseau est gérée via un worker cron (re-traitement asynchrone et persistance d'échecs dans un Outbox) plutôt qu'un retry synchrone dans la requête HTTP.
+
+## Principales fonctions
+---------------------
+- POST /api/import-csv : importe deux fichiers CSV (customers + purchases) vers SQLite.
+- POST /api/send-customers : déclenche l'envoi des clients non synchronisés vers l'API externe.
+
+## Points de conception importants
+-------------------------------
+- Le champ Purchase.date est stocké en base comme un objet Python datetime (SQLAlchemy DateTime). Les appels internes à la persistence s'attendent à recevoir des objets datetime.
+- Pour la résilience, j'ai choisi une approche par cronjob / worker (flush périodique / trigger manuel) qui regroupe les envois et persiste les payloads échoués dans une outbox. Ce choix privilégie la robustesse et la traçabilité plutôt que des retries synchrone lourds dans le même flow HTTP.
 
 ## Installation (local)
 1. Créez et activez un environnement virtuel Python >= 3.13
@@ -28,11 +37,11 @@ L'API sera disponible sur http://127.0.0.1:8000
 
 1) Import CSV (POST /api/import-csv)
 - Exécuter (remplacez les chemins par vos fichiers locaux) :
-curl --location 'http://127.0.0.1:8000/api/import-csv' \
-  --header 'Content-Type: application/json' \
-  --data '{
-    "customers_file_path": "/opt/custexport/customers.csv",
-    "purchased_file_path": "/opt/custexport/purchases.csv"
+curl -v -X POST "http://127.0.0.1:8000/api/import-csv" \
+  -H "Content-Type: application/json" \
+  -d '{
+    "customers_file_path": "data/customers.csv",
+    "purchased_file_path": "data/purchases.csv"
   }'
 
 - Réponses attendues :

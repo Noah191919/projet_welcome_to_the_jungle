@@ -1,7 +1,6 @@
 from __future__ import annotations
 from pydantic import BaseModel, EmailStr, Field
 from typing import Optional
-from datetime import datetime
 
 class ImportCSVRequest(BaseModel):
     customers_file_path: str
@@ -13,7 +12,7 @@ class PurchaseSchema(BaseModel):
     quantity: int
     price: float
     currency: str
-    date: datetime
+    date: str
     is_synchronized: bool = False
     attempt_number: int = 0
 
